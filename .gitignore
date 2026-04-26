@@ -1,0 +1,19 @@
+# Python
+
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+build/
+venv/
+.env
+env/
+.mypy_cache/
+.tox/
+.venv/
+*.egg-info/
+*.log
+htmlcov/
+*.egg
+develop-eggs/

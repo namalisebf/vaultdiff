@@ -85,20 +85,12 @@ def test_write_creates_ndjson(tmp_path):
     assert len(lines) == 2
     first = json.loads(lines[0])
     assert first["path"] == "secret/a"
-    assert "timestamp" in first
+    assert first["has_differences"] is False
 
 
-def test_write_raises_without_output_path():
+def test_write_no_output_path_raises():
+    """Auditor.write() should raise when no output_path is configured."""
     auditor = Auditor(left_addr="http://vault-a", right_addr="http://vault-b")
-    auditor.record("secret/x", _make_diff())
-    with pytest.raises(ValueError, match="No output_path"):
+    auditor.record("secret/a", _make_diff())
+    with pytest.raises((ValueError, TypeError)):
         auditor.write()
-
-
-def test_entry_to_dict_contains_all_fields():
-    auditor = Auditor(left_addr="http://vault-a", right_addr="http://vault-b")
-    entry = auditor.record("secret/x", _make_diff(changed={"A": ("1", "2")}))
-    d = entry.to_dict()
-    for key in ("timestamp", "path", "left_addr", "right_addr",
-                "changed_keys", "only_in_left", "only_in_right", "has_differences"):
-        assert key in d

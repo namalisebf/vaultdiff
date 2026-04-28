@@ -13,3 +13,7 @@ ignore = ["E501"]
 
 [tool.ruff.isort]
 known-first-party = ["vaultdiff"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"

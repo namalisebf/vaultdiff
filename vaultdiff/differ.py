@@ -67,3 +67,24 @@ class VaultDiffer:
         """Recursively diff all secrets under *mount* using the left client."""
         paths = self.left.list_secrets(mount)
         return self.diff_paths(paths)
+
+    def diff_summary(self, diffs: List[SecretDiff]) -> Dict[str, int]:
+        """Return a summary count of differences across a list of SecretDiff results.
+
+        Returns a dict with keys:
+          - ``total``: total number of paths compared
+          - ``unchanged``: paths with no differences
+          - ``changed``: paths that have at least one difference
+          - ``changed_keys``: total number of individual key-level changes
+        """
+        changed_paths = [d for d in diffs if d.has_differences]
+        changed_keys = sum(
+            len(d.changed) + len(d.only_in_left) + len(d.only_in_right)
+            for d in changed_paths
+        )
+        return {
+            "total": len(diffs),
+            "unchanged": len(diffs) - len(changed_paths),
+            "changed": len(changed_paths),
+            "changed_keys": changed_keys,
+        }

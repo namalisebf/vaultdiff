@@ -15,25 +15,32 @@ class OutputFormat:
     JSON = "json"
 
 
+def _colorize(text: str, color_code: str, color: bool) -> str:
+    """Wrap *text* in ANSI *color_code* escape sequences when *color* is True."""
+    if color:
+        return f"{color_code}{text}{TERM_RESET}"
+    return text
+
+
 def format_diff_text(path: str, diffs: List[SecretDiff], color: bool = True) -> str:
     """Format a list of SecretDiff entries as a human-readable text block."""
     lines = [f"--- {path} (left)"]
     lines.append(f"+++ {path} (right)")
 
     if not diffs:
-        marker = f"{TERM_GREEN}={TERM_RESET}" if color else "="
+        marker = _colorize("=", TERM_GREEN, color)
         lines.append(f"  {marker}  (no differences)")
         return "\n".join(lines)
 
     for diff in sorted(diffs, key=lambda d: d.key):
         if diff.only_in_left:
-            prefix = f"{TERM_RED}-{TERM_RESET}" if color else "-"
+            prefix = _colorize("-", TERM_RED, color)
             lines.append(f"  {prefix}  {diff.key}: {diff.left_value!r}")
         elif diff.only_in_right:
-            prefix = f"{TERM_GREEN}+{TERM_RESET}" if color else "+"
+            prefix = _colorize("+", TERM_GREEN, color)
             lines.append(f"  {prefix}  {diff.key}: {diff.right_value!r}")
         else:
-            prefix = f"{TERM_YELLOW}~{TERM_RESET}" if color else "~"
+            prefix = _colorize("~", TERM_YELLOW, color)
             lines.append(
                 f"  {prefix}  {diff.key}: {diff.left_value!r} -> {diff.right_value!r}"
             )

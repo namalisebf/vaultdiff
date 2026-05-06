@@ -77,3 +77,22 @@ def test_no_request_when_entries_empty_and_only_on_differences():
     with patch("urllib.request.urlopen") as mock_open:
         notifier.send([])
         mock_open.assert_not_called()
+
+
+def test_only_differences_entries_sent_when_flag_set():
+    """When only_on_differences=True, only entries with differences are included in the payload."""
+    config = NotifierConfig(webhook_url="http://hook.example.com", only_on_differences=True)
+    notifier = Notifier(config)
+    entries = [
+        _make_entry("secret/changed", True, {"key": ("old", "new")}),
+        _make_entry("secret/unchanged", False),
+    ]
+    captured: list = []
+    with patch("urllib.request.urlopen", side_effect=_capture_request_body(captured)):
+        notifier.send(entries)
+
+    assert len(captured) == 1
+    payload = captured[0]
+    paths = [e["path"] for e in payload["vaultdiff_audit"]]
+    assert "secret/changed" in paths
+    assert "secret/unchanged" not in paths

@@ -80,3 +80,11 @@ class Scheduler:
     @property
     def results(self) -> List[RunResult]:
         return list(self._results)
+
+    def results_for_path(self, path: str) -> List[RunResult]:
+        """Return all recorded results filtered to a specific Vault path."""
+        return [r for r in self._results if r.path == path]
+
+    def error_count(self) -> int:
+        """Return the total number of runs that encountered an error."""
+        return sum(1 for r in self._results if r.error is not None)

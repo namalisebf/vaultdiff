@@ -34,6 +34,13 @@ def test_digest_secret_differs_on_value_change():
     assert _digest_secret(a) != _digest_secret(b)
 
 
+def test_digest_secret_differs_on_key_change():
+    """Changing a key name (not just value) should produce a different digest."""
+    a = {"key1": "value"}
+    b = {"key2": "value"}
+    assert _digest_secret(a) != _digest_secret(b)
+
+
 def test_digest_entry_match_true_when_same():
     d = _digest_secret({"k": "v"})
     entry = DigestEntry(path="sec/a", left_digest=d, right_digest=d)
@@ -76,6 +83,16 @@ def test_digest_diffs_none_data_produces_none_digest():
     entry = report.entries[0]
     assert entry.left_digest is None
     assert entry.right_digest is not None
+    assert entry.match is False
+
+
+def test_digest_diffs_both_none_data_produces_none_digests():
+    """When both sides are None the entry should have no digests and not match."""
+    diff = SecretDiff(path="sec/gone", left_data=None, right_data=None)
+    report = digest_diffs([diff])
+    entry = report.entries[0]
+    assert entry.left_digest is None
+    assert entry.right_digest is None
     assert entry.match is False
 
 

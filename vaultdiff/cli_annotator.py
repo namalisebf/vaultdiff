@@ -13,6 +13,27 @@ from vaultdiff.formatter import OutputFormat
 from vaultdiff.vault_client import VaultClient, VaultClientError
 
 
+def _parse_note_rule(raw: str) -> AnnotationRule:
+    """Parse a raw PATTERN:NOTE string into an AnnotationRule.
+
+    Args:
+        raw: A string in the form ``PATTERN:NOTE``.
+
+    Returns:
+        An :class:`AnnotationRule` built from the parsed pattern and note.
+
+    Raises:
+        click.BadParameter: If the string does not contain a ``:`` separator.
+    """
+    if ":" not in raw:
+        raise click.BadParameter(
+            f"Expected PATTERN:NOTE, got: {raw}",
+            param_hint="'--note'",
+        )
+    pattern, note = raw.split(":", 1)
+    return AnnotationRule(pattern=pattern, note=note)
+
+
 @click.command("annotate")
 @click.option("--left-addr", required=True, envvar="VAULT_LEFT_ADDR", help="Left Vault address.")
 @click.option("--left-token", required=True, envvar="VAULT_LEFT_TOKEN", help="Left Vault token.")
@@ -39,11 +60,11 @@ def annotate_command(
     """Compare paths and attach annotation notes based on path patterns."""
     rules = []
     for raw in raw_notes:
-        if ":" not in raw:
-            click.echo(f"Invalid --note value (expected PATTERN:NOTE): {raw}", err=True)
+        try:
+            rules.append(_parse_note_rule(raw))
+        except click.BadParameter as exc:
+            click.echo(str(exc), err=True)
             sys.exit(2)
-        pattern, note = raw.split(":", 1)
-        rules.append(AnnotationRule(pattern=pattern, note=note))
 
     config = AnnotationConfig(rules=rules)
 
